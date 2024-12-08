@@ -10,6 +10,7 @@ import * as http from 'http';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from "../models/user.model.js";
+import { Config } from "../config.js";
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -17,8 +18,8 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: process.env.Email,
-    pass: process.env.EmailPassword,
+    user: Config.Email,
+    pass: Config.EmailPassword,
   },
 });
 
@@ -85,7 +86,7 @@ const login = async (req, res, next) => {
     sub: user._id,
   };
 
-  const new_token = jwt.sign(jwt_payload, process.env.JWTsecret, {
+ const new_token = jwt.sign(jwt_payload, Config.JWT_secret, {
     algorithm: "HS256",
     expiresIn: "1d",
   });
@@ -102,7 +103,7 @@ const verifyEmail = async (req, res, next) => {
 
   const verifyCode = Math.floor(Math.random() * 600000);
 
-  const verifyExpiredIn = moment().add(5, "minutes")
+  const verifyExpiredIn = moment().add(Config.Minute, "minutes")
 
   req.user.verifyCode = verifyCode;
   req.user.verifyExpiredIn = verifyExpiredIn;
@@ -110,7 +111,7 @@ const verifyEmail = async (req, res, next) => {
   await req.user.save();
 
   const mailOptions = {
-    from: process.env.Email,
+    from: Config.Email,
     to: email,
     subject: "Hello",
     text: `Please Verify your Email address ${verifyCode}`,
@@ -183,13 +184,35 @@ const ForgetPass = async(req, res, next)=>{
           message: "Belə bir istifadəçi yoxdur",
         });
       }
-    //   console.log(users)
+   
     const token = uuidv4()
+    const resetExpiredIn = moment().add(Config.Minute, "minutes")
     user.uuidToken = token
+    user.resetExpiredIn = resetExpiredIn
+    console.log(resetExpiredIn)
      await user.save()
-     console.log(token)
+    
     // res.send(data)
-      return res.json(token)
+      res.json("Check your email")
+
+      const resetUrl = `${Config.ClientBaseUrl}${token}`;
+
+        const mailOptions = {
+            from: Config.Email,
+            to: req.body.email,
+            subject: 'Password Reset Request',
+            html: `<h3>Password Reset</h3>
+                <p>To reset your password, click the link below:</p>
+                <a href="${resetUrl}">Reset Password</a>
+                <p>This link is valid for ${Config.Minute} minute.</p>`,
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                return res.status(500).json({ message: 'Error sending email', error });
+            }
+            return res.status(200).json({ message: 'Password reset email sent successfully.' });
+        });
 
 }
 
@@ -215,8 +238,19 @@ const CreatePass = async(req, res, next)=>{
           message: "Belə bir istifadəçi yoxdur",
         });
       }
-    if(user.password===validData.newPassword) return res.json("Əvvəlki parolu yaza bilməzsiniz")
+      if(user.resetExpiredIn < Date.now()) {
+        return res.status(401).json({
+          message: "Artıq vaxt bitib, yenidən cəhd edin!!!",
+        });
+      }
+      const ValidPassword = await bcrypt.compare(validData.newPassword, user.password);
+      console.log(user.password)
+      if(ValidPassword) return res.json("Əvvəlki parolu yaza bilməzsiniz")
+
+       validData.newPassword = await bcrypt.hash(validData.newPassword, 10)
+      
 user.password = validData.newPassword
+user.uuidToken = null
 await user.save()
 res.send(`${user.email} mailinin password-ü yeniləndi`)
 }

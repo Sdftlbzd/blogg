@@ -55,7 +55,11 @@ const UserShema = new mongoose.Schema({
   uuidToken:{
     type:String,
     default:null
-  }
+  },
+  resetExpiredIn:{
+    type: Date,
+    default: null
+}
 });
 
 export const User = mongoose.model("User", UserShema);
