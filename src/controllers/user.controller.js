@@ -233,11 +233,12 @@ const CreatePass = async(req, res, next)=>{
         uuidToken: req.params.uuidToken,
       });
 
-      if(!user) {
+      if(!user || !newPassword) {
         return res.status(401).json({
-          message: "Belə bir istifadəçi yoxdur",
+          message: "Token və ya password yoxdur",
         });
       }
+      
       if(user.resetExpiredIn < Date.now()) {
         return res.status(401).json({
           message: "Artıq vaxt bitib, yenidən cəhd edin!!!",
