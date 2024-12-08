@@ -7,8 +7,6 @@ import { Mainrouter } from './src/routes/index.js'
 const app = express()
 app.use(express.json())
 
-
-
 mongoose.connect(process.env.MYURL)
 .then(()=>{
 console.log("Connet to DB")
@@ -16,6 +14,7 @@ console.log("Connet to DB")
 .catch((error)=>{
 console.error(`Error bash verdi ${error}`)
 })
+
 
 app.use('/', Mainrouter)
 const port= process.env.PORT
