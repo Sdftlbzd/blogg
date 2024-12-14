@@ -20,7 +20,7 @@ export const useAuth = async (req, res, next) => {
     try {
         const jwtResult = jwt.verify(access_token, Config.JWT_secret)
 
-        const user = await User.findById(jwtResult.sub).select("_id email verifyCode isVerifiedEmail verifyExpiredIn")
+        const user = await User.findById(jwtResult.sub)
         if (!user) return res.status(401).json({ message: "User not found!" });
 
         req.user = user;
@@ -34,3 +34,4 @@ export const useAuth = async (req, res, next) => {
         })
     }
 }
+

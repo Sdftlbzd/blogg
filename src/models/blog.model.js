@@ -16,6 +16,11 @@ const BlogShema = new mongoose.Schema({
     ref: "User",
     require: true
   }],
+  photo:{
+    type:Object,
+    default:null,
+    trim: true,
+  }
 });
 
 export const Blog = mongoose.model("Blog", BlogShema);

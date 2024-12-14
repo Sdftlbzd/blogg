@@ -41,6 +41,7 @@ const signin = async (req, res, next) => {
       });
     });
 
+
   if (await User.findOne({ email: validData.email })) {
     return res.json({
       message: `${validData.email} artıq sistemde movcuddur!`,
@@ -61,7 +62,7 @@ const login = async (req, res, next) => {
     .validateAsync(req.body, { abortEarly: false })
     .catch((err) => {
       return res.status(422).json({
-        message: "Xeta bash verdi!",
+        message: "Email və ya password yalnışdır!",
         error: err.details.map((item) => item.message),
       });
     });
@@ -97,11 +98,11 @@ const login = async (req, res, next) => {
 };
 
 const verifyEmail = async (req, res, next) => {
-    
+   try{ 
   const { email } = req.body;
   if (req.user.isVerifiedEmail===true) return res.json({ message: "Email is already verified" })
 
-  const verifyCode = Math.floor(Math.random() * 600000);
+  const verifyCode = Math.floor(100000+Math.random() * 600000);
 
   const verifyExpiredIn = moment().add(Config.Minute, "minutes")
 
@@ -130,7 +131,13 @@ const verifyEmail = async (req, res, next) => {
       return res.json({ message: "Check your email" });
     }
   });
-};
+}catch (error) {
+  res.status(500).json({
+      message: error.message,
+      error, 
+      
+  })
+}};
 
 const checkVerifyCode = async(req, res) => {
 
@@ -144,6 +151,7 @@ const checkVerifyCode = async(req, res) => {
             //     "object.regex": "Must have at least 8 characters",
             // }),
         }).validateAsync(req.body, { abortEarly: false })
+
   const user = req.user;
 
    if (!user.verifyCode) {
@@ -166,16 +174,16 @@ const checkVerifyCode = async(req, res) => {
     message: "Email verified successfully!"})
 
 } catch (error) {
-    console.error("Error: ", error);
     res.status(500).json({
         message: error.message,
-        error,
+        error, 
+        
     })
 }
 };
 
 const ForgetPass = async(req, res, next)=>{
-    const user = await User.findOne({
+   const user = await User.findOne({
         email: req.body.email,
 });
      // res.json(user._id)
@@ -189,7 +197,7 @@ const ForgetPass = async(req, res, next)=>{
     const resetExpiredIn = moment().add(Config.Minute, "minutes")
     user.uuidToken = token
     user.resetExpiredIn = resetExpiredIn
-    console.log(resetExpiredIn)
+    //console.log(resetExpiredIn)
      await user.save()
     
     // res.send(data)
@@ -233,7 +241,7 @@ const CreatePass = async(req, res, next)=>{
         uuidToken: req.params.uuidToken,
       });
 
-      if(!user || !newPassword) {
+      if(!user || !validData.newPassword) {
         return res.status(401).json({
           message: "Token və ya password yoxdur",
         });
@@ -245,7 +253,7 @@ const CreatePass = async(req, res, next)=>{
         });
       }
       const ValidPassword = await bcrypt.compare(validData.newPassword, user.password);
-      console.log(user.password)
+      
       if(ValidPassword) return res.json("Əvvəlki parolu yaza bilməzsiniz")
 
        validData.newPassword = await bcrypt.hash(validData.newPassword, 10)

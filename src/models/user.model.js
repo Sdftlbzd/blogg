@@ -1,6 +1,6 @@
 
 import mongoose from "mongoose";
-import { type } from "os";
+
 
 const UserShema = new mongoose.Schema({
   name: {
@@ -34,12 +34,12 @@ const UserShema = new mongoose.Schema({
     require: true,
     trim: true,
   },
-  blogId: [
+  blogs: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Blog",
-    },
-  ],
+    }],
+
   isVerifiedEmail: {
     type: Boolean,
     default: null,
