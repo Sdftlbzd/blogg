@@ -3,24 +3,29 @@ import mongoose from "mongoose";
 const BlogShema = new mongoose.Schema({
   title: {
     type: String,
-    require: true,
+    required: true,
     trim: true,
   },
   description: {
     type: String,
-    require: true,
+    required: true,
     trim: true,
   },
-  userId: [{
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    require: true
-  }],
+    required: true
+  },
   photo:{
-    type:Object,
+    type:String,
     default:null,
     trim: true,
-  }
+  },
+  photos:[{
+    type:String,
+    default:null,
+    trim: true,
+  }],
 });
 
 export const Blog = mongoose.model("Blog", BlogShema);

@@ -263,11 +263,43 @@ user.uuidToken = null
 await user.save()
 res.send(`${user.email} mailinin password-ü yeniləndi`)
 }
+
+const DeleteUser = async(req, res, next) =>{
+  const id = req.params.id
+
+  const user = await User.findOne({
+      _id: id,
+    });    
+
+  if(!user) return res.json("Belə bir User yoxdur")
+
+  const DeleteUser = await User.deleteOne({
+      _id: id,
+    });    
+ 
+const array = user.blogs
+if(array.length===0) return res.json("Bu userin heç bir blog-u yoxdur")
+
+  const DeleteBlogs = await Blog.deleteMany({
+      userId: id,
+    });    
+    array.splice(0 , array.length);
+    await user.save()
+  res.send("User deleted successfully from database");
+};
+
+const UserDetails = async (req, res, next) => {
+  const user = await User.findById(req.params.id)//.select("_id fullname email isVerifiedEmail")
+  res.json(user)
+}   
+
 export const UserController = () => ({
   login,
   signin,
   verifyEmail,
   checkVerifyCode,
   ForgetPass,
-  CreatePass
+  CreatePass,
+  DeleteUser,
+  UserDetails
 });
